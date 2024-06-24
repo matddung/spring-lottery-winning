@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.spec.SecretKeySpec;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -79,18 +82,6 @@ public class JwtService {
 
         setAccessTokenHeader(response, accessToken);
         setRefreshTokenHeader(response, refreshToken);
-
-        logHeaders(response);
-    }
-
-    private void logHeaders(HttpServletResponse response) {
-        Collection<String> headerNames = response.getHeaderNames();
-        log.info("******************** headerNames *********************");
-        for (String headerName : headerNames) {
-            String headerValue = response.getHeader(headerName);
-            log.info("{}: {}", headerName, headerValue);
-        }
-        log.info("******************** headerNames *********************");
     }
 
     public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {

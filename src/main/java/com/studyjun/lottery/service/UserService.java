@@ -39,7 +39,7 @@ public class UserService {
                 .nickname(dto.getNickname())
                 .phoneNumber(dto.getPhoneNumber())
                 .birth(dto.getBirth())
-                .role("ROLE_USER")
+                .role("USER")
                 .socialId("사이트 회원가입 유저")
                 .socialType("사이트 회원가입 유저")
                 .build();

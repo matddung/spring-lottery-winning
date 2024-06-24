@@ -29,7 +29,7 @@ public class User {
     private String refreshToken;
 
     public void authorizeUser() {
-        this.role = "ROLE_USER";
+        this.role = "USER";
     }
 
     public void updateNickname(String nickname) {

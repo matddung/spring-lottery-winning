@@ -9,18 +9,15 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.Map;
-import java.util.UUID;
 
 @Getter
+@Builder
 public class OAuth2Attributes {
     private String nameAttributeKey;
+    private String email;
+    private String provider;
     private OAuth2UserInfo oAuth2UserInfo;
-
-    @Builder
-    public OAuth2Attributes(String nameAttributeKey, OAuth2UserInfo oAuth2UserInfo) {
-        this.nameAttributeKey = nameAttributeKey;
-        this.oAuth2UserInfo = oAuth2UserInfo;
-    }
+    private Map<String, Object> attributes;
 
     public static OAuth2Attributes of(String socialType,
                                      String userNameAttributeName, Map<String, Object> attributes) {
@@ -35,7 +32,11 @@ public class OAuth2Attributes {
     }
 
     private static OAuth2Attributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        Map<String, Object> kakaoProfile = (Map<String, Object>) kakaoAccount.get("profile");
+
         return OAuth2Attributes.builder()
+                .email((String) kakaoAccount.get("email"))
                 .nameAttributeKey(userNameAttributeName)
                 .oAuth2UserInfo(new KakaoOAuth2UserInfo(attributes))
                 .build();
@@ -43,13 +44,17 @@ public class OAuth2Attributes {
 
     public static OAuth2Attributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
         return OAuth2Attributes.builder()
+                .email((String) attributes.get("email"))
                 .nameAttributeKey(userNameAttributeName)
                 .oAuth2UserInfo(new GoogleOAuth2UserInfo(attributes))
                 .build();
     }
 
     public static OAuth2Attributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+
         return OAuth2Attributes.builder()
+                .email((String) response.get("email"))
                 .nameAttributeKey(userNameAttributeName)
                 .oAuth2UserInfo(new NaverOAuth2UserInfo(attributes))
                 .build();
@@ -59,9 +64,9 @@ public class OAuth2Attributes {
         return User.builder()
                 .socialType(socialType)
                 .socialId(oauth2UserInfo.getId())
-                .email(UUID.randomUUID() + "@socialUser.com")
+                .email(email)
                 .nickname(oauth2UserInfo.getNickname())
-                .role("ROLE_GUEST")
+                .role("GUEST")
                 .build();
     }
 }

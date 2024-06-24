@@ -12,4 +12,6 @@ public class UserDto {
     private String phoneNumber;
     private String nickname;
     private String birth;
+    private String accessToken;
+    private String refreshToken;
 }
