@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -50,7 +51,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         User findUser = userRepository.findBySocialTypeAndSocialId(socialType,
                 attributes.getOAuth2UserInfo().getId()).orElse(null);
 
-        if(findUser == null) {
+        if (findUser == null) {
             return saveUser(attributes, socialType);
         }
 
@@ -59,6 +60,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private User saveUser(OAuth2Attributes attributes, String socialType) {
         User createdUser = attributes.toEntity(socialType, attributes.getOAuth2UserInfo());
+        createdUser.setAccount(socialType + UUID.randomUUID().toString().replace("-", "").substring(0, 10));
+        createdUser.setPassword(socialType + UUID.randomUUID().toString().replace("-", "").substring(0, 10));
         return userRepository.save(createdUser);
     }
 }

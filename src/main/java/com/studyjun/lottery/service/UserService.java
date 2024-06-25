@@ -46,4 +46,16 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    public void updateAdditionalInfo(UserDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 없습니다. email=" + dto.getEmail()));
+
+        user.setNickname(dto.getNickname());
+        user.setBirth(dto.getBirth());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setRole("USER");
+
+        userRepository.save(user);
+    }
 }

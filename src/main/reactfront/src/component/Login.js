@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../Login.css';
@@ -10,22 +10,37 @@ function Login({ login }) {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    useEffect(() => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('email');
+    }, []);
+
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get('email');
+    
+        if (email) {
+          // localStorage에 이메일 저장
+          localStorage.setItem('email', email);
+          console.log('Login successful! Email:', email);
+        }
+      }, []);
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
         const userDto = { account, password }
 
         try {
-            console.log("로그인 시도 중...");
             const response = await axios.post('/login', userDto, {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                withCredentials: true // 자격 증명 포함
+                withCredentials: true
             });
 
             if (response.status === 200) {
-
                 const accessToken = response.headers['authorization'];
                 const refreshToken = response.headers['refresh'];
 

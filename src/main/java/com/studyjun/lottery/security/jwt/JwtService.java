@@ -92,14 +92,12 @@ public class JwtService {
         response.setHeader(refreshHeader, refreshToken);
     }
 
-    // 헤더에서 AccessToken 추출
     public Optional<String> extractAccessToken(HttpServletRequest request) {
         return Optional.ofNullable(request.getHeader(accessHeader))
                 .filter(refreshToken -> refreshToken.startsWith(BEARER))
                 .map(refreshToken -> refreshToken.replace(BEARER, ""));
     }
 
-    // 헤더에서 RefreshToken 추출
     public Optional<String> extractRefreshToken(HttpServletRequest request) {
         return Optional.ofNullable(request.getHeader(refreshHeader))
                 .filter(refreshToken -> refreshToken.startsWith(BEARER))
@@ -123,7 +121,10 @@ public class JwtService {
     public void updateRefreshToken(String email, String refreshToken) {
         userRepository.findByEmail(email)
                 .ifPresentOrElse(
-                        user -> user.updateRefreshToken(refreshToken),
+                        user -> {
+                            user.updateRefreshToken(refreshToken);
+                            userRepository.save(user);
+                        },
                         () -> new Exception("일치하는 회원이 없습니다.")
                 );
     }

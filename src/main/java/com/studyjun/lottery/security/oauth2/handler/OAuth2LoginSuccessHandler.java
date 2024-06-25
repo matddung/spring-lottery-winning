@@ -24,16 +24,18 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         log.info("OAuth2 Login 성공!");
         try {
             CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+            String email = oAuth2User.getEmail();
+            log.info("email : {}", email);
 
             if (oAuth2User.getRole().equals("GUEST")) {
-                String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
-                response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
-                response.sendRedirect("/oauth2/signUp");
-//                response.sendRedirect("/");
+                String accessToken = jwtService.createAccessToken(email);
+                response.addHeader(jwtService.getAccessHeader(), accessToken);
+                response.sendRedirect("http://localhost:3000/additional-info?email=" + email);
 
                 jwtService.sendAccessAndRefreshToken(response, accessToken, null);
             } else {
                 loginSuccess(response, oAuth2User);
+                response.sendRedirect("http://localhost:3000/main");
             }
         } catch (Exception e) {
             throw e;
@@ -43,8 +45,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private void loginSuccess(HttpServletResponse response, CustomOAuth2User oAuth2User) throws IOException {
         String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
         String refreshToken = jwtService.createRefreshToken();
-        response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
-        response.addHeader(jwtService.getRefreshHeader(), "Bearer " + refreshToken);
+        response.addHeader(jwtService.getAccessHeader(), accessToken);
+        response.addHeader(jwtService.getRefreshHeader(), refreshToken);
 
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         jwtService.updateRefreshToken(oAuth2User.getEmail(), refreshToken);

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Login from './component/Login';
 import SignUp from './component/SignUp';
 import MainPage from './component/Main';
+import AdditionalInfo from './component/AdditionalInfo';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,6 +18,7 @@ function App() {
       <Route path='/' element={<Login login={login} />} />
         <Route path='/signUp' element={<SignUp />}/>
         <Route path="/main" element={<MainPage />} />
+        <Route path='/additional-info' element={<AdditionalInfo />} />
       </Routes>
     </Router>
   );
