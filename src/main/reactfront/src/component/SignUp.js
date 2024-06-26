@@ -3,21 +3,65 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function SignUp() {
-    const [account, setAccount] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [nickname, setNickname] = useState('');
-    const [birth, setBirth] = useState('');
-    const [email, setEmail] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        account: '',
+        password: '',
+        confirmPassword: '',
+        nickname: '',
+        birth: '',
+        email: '',
+        phoneNumber: ''
+    });
+
+    const [errors, setErrors] = useState({
+        account: '',
+        nickname: '',
+        email: '',
+        phoneNumber: '',
+        general: ''
+    });
+
     const navigate = useNavigate();
+
+    const validateField = async (field, value) => {
+        try {
+            console.log(`Validating ${field} with value ${value}`);
+            const response = await axios.get(`/api/validate/${field}`, {
+                params: {
+                    [field]: value,
+                },
+            });
+            console.log(`${field} is valid`);
+            setErrors(errors => ({ ...errors, [field]: '' }));
+            return true;
+        } catch (error) {
+            if (error.response && error.response.status === 409) {
+                setErrors(errors => ({ ...errors, [field]: error.response.data }));
+                console.log(`${field} validation error: ${error.response.data}`);
+            } else {
+                setErrors(errors => ({ ...errors, [field]: '검증 중 오류가 발생했습니다.' }));
+                console.log(`${field} validation error: 검증 중 오류가 발생했습니다.`);
+            }
+            return false;
+        }
+    };
+
+    const handleChange = async (event) => {
+        const { name, value } = event.target;
+        setFormData(formData => ({ ...formData, [name]: value }));
+
+        if (['account', 'nickname', 'email', 'phoneNumber'].includes(name)) {
+            await validateField(name, value);
+        }
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        const { password, confirmPassword, birth } = formData;
+
         if (password !== confirmPassword) {
-            setError('비밀번호가 일치하지 않습니다.');
+            setErrors(errors => ({ ...errors, general: '비밀번호가 일치하지 않습니다.' }));
             return;
         }
 
@@ -27,31 +71,34 @@ function SignUp() {
         const age = currentYear - birthYear;
 
         if (age < 19) {
-            setError('만 19세 이상만 회원가입이 가능합니다.');
+            setErrors(errors => ({ ...errors, general: '만 19세 이상만 회원가입이 가능합니다.' }));
             return;
         }
 
-        const userDto = {
-            account,
-            password,
-            nickname,
-            birth,
-            email,
-            phoneNumber
-        };
+        const isAccountValid = await validateField('account', formData.account);
+        const isNicknameValid = await validateField('nickname', formData.nickname);
+        const isEmailValid = await validateField('email', formData.email);
+        const isPhoneNumberValid = await validateField('phoneNumber', formData.phoneNumber);
+
+        if (!isAccountValid || !isNicknameValid || !isEmailValid || !isPhoneNumberValid) {
+            return;
+        }
 
         try {
-            // 서버에 회원가입 데이터 전송
-            const response = await axios.post('/signUp', userDto);
+            const response = await axios.post('/signUp', formData);
+            console.log('Response:', response);
             if (response.status === 200) {
-                    navigate('/');
+                navigate('/');
             } else {
-                // 회원가입 실패 시 처리 로직
-                setError('회원가입에 실패했습니다. 다시 시도해주세요.');
+                setErrors(errors => ({ ...errors, general: '회원가입에 실패했습니다. 다시 시도해주세요.' }));
             }
         } catch (error) {
-            // 에러 처리 로직
-            setError('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+            console.log('Error during signUp:', error);
+            if (error.response && error.response.data) {
+                setErrors(errors => ({ ...errors, general: error.response.data }));
+            } else {
+                setErrors(errors => ({ ...errors, general: '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.' }));
+            }
         }
     };
 
@@ -64,18 +111,21 @@ function SignUp() {
                     <input
                         type="text"
                         id="account"
-                        value={account}
-                        onChange={(e) => setAccount(e.target.value)}
+                        name="account"
+                        value={formData.account}
+                        onChange={handleChange}
                         required
                     />
+                    {errors.account && <p className="error">{errors.account}</p>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="password">비밀번호:</label>
                     <input
                         type="password"
                         id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
                         required
                     />
                 </div>
@@ -84,8 +134,9 @@ function SignUp() {
                     <input
                         type="password"
                         id="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
                         required
                     />
                 </div>
@@ -94,19 +145,21 @@ function SignUp() {
                     <input
                         type="text"
                         id="nickname"
-                        value={nickname}
-                        onChange={(e) => setNickname(e.target.value)}
+                        name="nickname"
+                        value={formData.nickname}
+                        onChange={handleChange}
                         required
                     />
+                    {errors.nickname && <p className="error">{errors.nickname}</p>}
                 </div>
-                {error && <p className="error"><span className="error-icon">⚠️</span> {error}</p>}
                 <div className="form-group">
                     <label htmlFor="birth">생년월일:</label>
                     <input
                         type="date"
                         id="birth"
-                        value={birth}
-                        onChange={(e) => setBirth(e.target.value)}
+                        name="birth"
+                        value={formData.birth}
+                        onChange={handleChange}
                         required
                     />
                 </div>
@@ -115,21 +168,26 @@ function SignUp() {
                     <input
                         type="email"
                         id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
                         required
                     />
+                    {errors.email && <p className="error">{errors.email}</p>}
                 </div>
                 <div className="form-group">
                     <label htmlFor="phoneNumber">전화번호:</label>
                     <input
                         type="tel"
                         id="phoneNumber"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        name="phoneNumber"
+                        value={formData.phoneNumber}
+                        onChange={handleChange}
                         required
                     />
+                    {errors.phoneNumber && <p className="error">{errors.phoneNumber}</p>}
                 </div>
+                {errors.general && <p className="error">{errors.general}</p>}
                 <button type="submit" className="signup-button">회원가입</button>
             </form>
         </div>

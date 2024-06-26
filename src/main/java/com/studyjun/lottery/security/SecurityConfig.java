@@ -46,7 +46,8 @@ public class SecurityConfig {
             "/js/**",
             "/favicon.ico",
             "/signUp",
-            "/additional-info"
+            "/additional-info",
+            "/api/validate/**"
     };
 
     @Bean
