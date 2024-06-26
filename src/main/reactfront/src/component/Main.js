@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import '../index.css';
 
 function Navbar() {
@@ -27,6 +28,20 @@ function Navbar() {
 
 
 function MainPage() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+
+    if (accessToken && refreshToken) {
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      console.log('Tokens saved to localStorage');
+    } else {
+      console.error('No tokens found in URL');
+    }
+  }, []);
+
   return (
     <div>
       <Navbar />

@@ -21,9 +21,7 @@ function Login({ login }) {
         const email = params.get('email');
     
         if (email) {
-          // localStorage에 이메일 저장
           localStorage.setItem('email', email);
-          console.log('Login successful! Email:', email);
         }
       }, []);
 
