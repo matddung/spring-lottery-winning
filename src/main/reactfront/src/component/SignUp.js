@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { debounce } from 'lodash';
 
 function SignUp() {
     const [formData, setFormData] = useState({
@@ -23,35 +24,38 @@ function SignUp() {
 
     const navigate = useNavigate();
 
-    const validateField = async (field, value) => {
-        try {
-            console.log(`Validating ${field} with value ${value}`);
-            const response = await axios.get(`/api/validate/${field}`, {
-                params: {
-                    [field]: value,
-                },
-            });
-            console.log(`${field} is valid`);
-            setErrors(errors => ({ ...errors, [field]: '' }));
-            return true;
-        } catch (error) {
-            if (error.response && error.response.status === 409) {
-                setErrors(errors => ({ ...errors, [field]: error.response.data }));
-                console.log(`${field} validation error: ${error.response.data}`);
-            } else {
-                setErrors(errors => ({ ...errors, [field]: '검증 중 오류가 발생했습니다.' }));
-                console.log(`${field} validation error: 검증 중 오류가 발생했습니다.`);
+    const validateField = useCallback(
+        debounce(async (field, value) => {
+            try {
+                console.log(`Validating ${field} with value ${value}`);
+                const response = await axios.get(`/api/validate/${field}`, {
+                    params: {
+                        [field]: value,
+                    },
+                });
+                console.log(`${field} is valid`);
+                setErrors(errors => ({ ...errors, [field]: '' }));
+                return true;
+            } catch (error) {
+                if (error.response && error.response.status === 409) {
+                    setErrors(errors => ({ ...errors, [field]: `⚠️ ${error.response.data}` }));
+                    console.log(`${field} validation error: ${error.response.data}`);
+                } else {
+                    setErrors(errors => ({ ...errors, [field]: '⚠️ 검증 중 오류가 발생했습니다.' }));
+                    console.log(`${field} validation error: 검증 중 오류가 발생했습니다.`);
+                }
+                return false;
             }
-            return false;
-        }
-    };
+        }, 150),
+        []
+    );
 
-    const handleChange = async (event) => {
+    const handleChange = (event) => {
         const { name, value } = event.target;
         setFormData(formData => ({ ...formData, [name]: value }));
 
         if (['account', 'nickname', 'email', 'phoneNumber'].includes(name)) {
-            await validateField(name, value);
+            validateField(name, value);
         }
     };
 
@@ -61,7 +65,7 @@ function SignUp() {
         const { password, confirmPassword, birth } = formData;
 
         if (password !== confirmPassword) {
-            setErrors(errors => ({ ...errors, general: '비밀번호가 일치하지 않습니다.' }));
+            setErrors(errors => ({ ...errors, general: '⚠️ 비밀번호가 일치하지 않습니다.' }));
             return;
         }
 
@@ -71,7 +75,7 @@ function SignUp() {
         const age = currentYear - birthYear;
 
         if (age < 19) {
-            setErrors(errors => ({ ...errors, general: '만 19세 이상만 회원가입이 가능합니다.' }));
+            setErrors(errors => ({ ...errors, general: '⚠️ 만 19세 이상만 회원가입이 가능합니다.' }));
             return;
         }
 
@@ -90,14 +94,14 @@ function SignUp() {
             if (response.status === 200) {
                 navigate('/');
             } else {
-                setErrors(errors => ({ ...errors, general: '회원가입에 실패했습니다. 다시 시도해주세요.' }));
+                setErrors(errors => ({ ...errors, general: '⚠️ 회원가입에 실패했습니다. 다시 시도해주세요.' }));
             }
         } catch (error) {
             console.log('Error during signUp:', error);
             if (error.response && error.response.data) {
-                setErrors(errors => ({ ...errors, general: error.response.data }));
+                setErrors(errors => ({ ...errors, general: `⚠️ ${error.response.data}` }));
             } else {
-                setErrors(errors => ({ ...errors, general: '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.' }));
+                setErrors(errors => ({ ...errors, general: '⚠️ 회원가입 중 오류가 발생했습니다. 다시 시도해주세요.' }));
             }
         }
     };
